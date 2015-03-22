@@ -148,5 +148,17 @@ traceThy = Op $ \j → do
   tell $ [Pack j]
   empty
 
+-- | A traced judging routine is constructed by precomposing 'traceThy' onto the main theory.
+--
+-- @
+-- 'tracedJudge' j = 'runIdentity' . 'runWriterT' . 'runMaybeT' $ ('close' $ 'traceThy' '<>' 'combinedThy') j
+-- @
+--
+-- >>> tracedJudge $ Check (Prod Unit Unit) (Pair Ax Ax)
+-- (Just True,[Check (Prod Unit Unit) (Pair Ax Ax),Check Unit Ax,Check Unit Ax])
+--
+-- >>> tracedJudge $ Check (Prod Unit Unit) (Pair Ax (Pair Ax Ax))
+-- (Just False,[Check (Prod Unit Unit) (Pair Ax (Pair Ax Ax)),Check Unit Ax,Check Unit (Pair Ax Ax)])
+--
 tracedJudge ∷ J b → (Maybe b, [Pack J])
 tracedJudge j = runIdentity . runWriterT . runMaybeT $ (close $ traceThy <> combinedThy) j
