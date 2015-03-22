@@ -32,11 +32,8 @@ import Data.Monoid
 newtype OpenT a b m b'
   = OpenT
   { _openT ∷ ReaderT (a → m b) m b'
-  } deriving (Applicative, Functor, Monad, Alternative, MonadPlus, MonadIO, MonadCont, MonadFix, MonadThrow, MonadCatch, MonadMask)
+  } deriving (Applicative, Functor, Monad, Alternative, MonadPlus, MonadIO, MonadCont, MonadFix, MonadThrow, MonadCatch, MonadMask, MonadError e, MonadWriter w, MonadState s)
 
-deriving instance MonadWriter w m ⇒ MonadWriter w (OpenT a b m)
-deriving instance MonadState s m ⇒ MonadState s (OpenT a b m)
-deriving instance MonadError e m ⇒ MonadError e (OpenT a b m)
 deriving instance MonadRWS r w s m ⇒ MonadRWS r w s (OpenT a b m)
 
 instance MonadTrans (OpenT a b) where
