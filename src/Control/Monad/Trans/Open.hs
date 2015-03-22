@@ -17,25 +17,42 @@ module Control.Monad.Trans.Open
 import Control.Monad.Open.Class
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Cont.Class
+import Control.Monad.Error.Class
+import Control.Monad.RWS.Class
 import Control.Monad.Reader
+import Control.Monad.State
 import Control.Monad.Writer
 import Data.Monoid
-import Data.Function
 
 -- | A concrete structure implementing the 'MonadOpen' signature.
 --
 newtype OpenT a b m b'
   = OpenT
   { _openT ∷ ReaderT (a → m b) m b'
-  } deriving (Applicative, Functor, Monad, Alternative, MonadIO)
+  } deriving (Applicative, Functor, Monad, Alternative, MonadPlus, MonadIO, MonadCont, MonadFix)
 
 instance MonadTrans (OpenT a b) where
-  lift x = OpenT $ lift x
+  lift = OpenT . lift
 
 instance MonadWriter w m ⇒ MonadWriter w (OpenT a b m) where
-  tell x = lift $ tell x
-  listen (OpenT x) = OpenT $ listen x
-  pass (OpenT x) = OpenT $ pass x
+  tell = OpenT . tell
+  listen = OpenT . listen . _openT
+  pass = OpenT . pass. _openT
+
+instance MonadReader r m ⇒ MonadReader r (OpenT a b m) where
+  ask = OpenT $ lift ask
+  local f (OpenT x) = OpenT . ReaderT $ local f . (runReaderT x)
+
+instance MonadState s m ⇒ MonadState s (OpenT a b m) where
+  get = OpenT $ get
+  put = OpenT . put
+
+instance MonadError e m ⇒ MonadError e (OpenT a b m) where
+  throwError = OpenT . throwError
+  catchError (OpenT m) = OpenT . catchError m . (_openT .)
+
+instance MonadRWS r w s m ⇒ MonadRWS r w s (OpenT a b m)
 
 -- | A simplified version of the 'OpenT' type which fixes the output parameter.
 type OpenT' a m b = OpenT a b m b
