@@ -1,8 +1,9 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE UnicodeSyntax #-}
@@ -17,6 +18,7 @@ module Control.Monad.Trans.Open
 import Control.Monad.Open.Class
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Catch
 import Control.Monad.Cont.Class
 import Control.Monad.Error.Class
 import Control.Monad.RWS.Class
@@ -30,29 +32,19 @@ import Data.Monoid
 newtype OpenT a b m b'
   = OpenT
   { _openT ∷ ReaderT (a → m b) m b'
-  } deriving (Applicative, Functor, Monad, Alternative, MonadPlus, MonadIO, MonadCont, MonadFix)
+  } deriving (Applicative, Functor, Monad, Alternative, MonadPlus, MonadIO, MonadCont, MonadFix, MonadThrow, MonadCatch, MonadMask)
+
+deriving instance MonadWriter w m ⇒ MonadWriter w (OpenT a b m)
+deriving instance MonadState s m ⇒ MonadState s (OpenT a b m)
+deriving instance MonadError e m ⇒ MonadError e (OpenT a b m)
+deriving instance MonadRWS r w s m ⇒ MonadRWS r w s (OpenT a b m)
 
 instance MonadTrans (OpenT a b) where
   lift = OpenT . lift
 
-instance MonadWriter w m ⇒ MonadWriter w (OpenT a b m) where
-  tell = OpenT . tell
-  listen = OpenT . listen . _openT
-  pass = OpenT . pass. _openT
-
 instance MonadReader r m ⇒ MonadReader r (OpenT a b m) where
   ask = OpenT $ lift ask
   local f (OpenT x) = OpenT . ReaderT $ local f . (runReaderT x)
-
-instance MonadState s m ⇒ MonadState s (OpenT a b m) where
-  get = OpenT $ get
-  put = OpenT . put
-
-instance MonadError e m ⇒ MonadError e (OpenT a b m) where
-  throwError = OpenT . throwError
-  catchError (OpenT m) = OpenT . catchError m . (_openT .)
-
-instance MonadRWS r w s m ⇒ MonadRWS r w s (OpenT a b m)
 
 -- | A simplified version of the 'OpenT' type which fixes the output parameter.
 type OpenT' a m b = OpenT a b m b
