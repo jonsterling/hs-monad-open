@@ -3,8 +3,8 @@
 
 name:                monad-open
 version:             0.1.0.0
--- synopsis:
--- description:
+synopsis:            Open recursion for when you need it
+description:         Introduces a monad transformer and MTL-style class for open recursion.
 license:             MIT
 license-file:        LICENSE
 author:              Jonathan Sterling
@@ -15,6 +15,10 @@ build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
 
+source-repository head
+  type: git
+  location: https://github.com/jonsterling/hs-monad-open.git
+
 library
   exposed-modules:     Control.Monad.Open.Class
                        Control.Monad.Trans.Open
@@ -22,7 +26,7 @@ library
   -- other-modules:
   -- other-extensions:
   build-depends:       base >=4.7 && <4.8,
-                       mtl,
-                       transformers
+                       mtl >=2.2,
+                       transformers >=0.4
   hs-source-dirs:      src
   default-language:    Haskell2010
