@@ -37,7 +37,7 @@ import Control.Monad.Trans.Maybe
 import Control.Monad.Writer
 import Data.Monoid
 
--- | The syntax of terms in our theory.
+-- | The syntax of types in our theory.
 data Ty
   = Unit
   | Prod Ty Ty
